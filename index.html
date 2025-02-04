@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Betting Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Betting Game 🎲</h1>
+        <p>Current Balance: $<span id="balance">{{ balance }}</span></p>
+        <button onclick="playCoinFlip()">Coin Flip</button>
+        <button onclick="playDiceRoll()">Dice Roll</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function placeBet(choice) {
+            const bet = prompt(`Place your bet (Current balance: $${document.getElementById('balance').innerText}):`);
+            if (!bet || isNaN(bet) || bet <= 0) {
+                alert('Invalid bet!');
+                return;
+            }
+
+            let guess = null;
+            if (choice === 'coin_flip') {
+                guess = prompt('Guess Heads or Tails:').toLowerCase();
+                if (guess !== 'heads' && guess !== 'tails') {
+                    alert('Invalid guess!');
+                    return;
+                }
+            } else if (choice === 'dice_roll') {
+                guess = prompt('Guess a number (1-6):');
+                if (isNaN(guess) || guess < 1 || guess > 6) {
+                    alert('Invalid guess!');
+                    return;
+                }
+            }
+
+            const response = await fetch('/bet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ choice, bet, guess })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById('balance').innerText = data.balance;
+                document.getElementById('result').innerHTML = `
+                    <p>Result: ${data.result}</p>
+                    <p>${data.message}</p>
+                `;
+            }
+        }
+
+        function playCoinFlip() {
+            placeBet('coin_flip');
+        }
+
+        function playDiceRoll() {
+            placeBet('dice_roll');
+        }
+    </script>
+</body>
+</html>
